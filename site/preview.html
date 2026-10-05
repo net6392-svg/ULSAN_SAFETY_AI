@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>동 위치 시각 검증 및 좌표 확인기</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background: #111827; color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        h1 { font-size: 18px; margin-bottom: 10px; color: #38bdf8; }
+        .controls { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
+        select, button { padding: 8px 12px; background: #1f2937; color: white; border: 1px solid #374151; border-radius: 6px; cursor: pointer; }
+        .info-bar { background: #0369a1; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 13px; margin-bottom: 15px; }
+        
+        .map-wrapper { position: relative; display: inline-block; border: 2px solid #374151; border-radius: 8px; overflow: hidden; max-width: 100%; }
+        .map-img { display: block; max-width: 100%; height: auto; user-select: none; }
+        
+        .pin { position: absolute; transform: translate(-50%, -50%); padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; color: white; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.6); }
+        .pin-normal { background: #059669; }
+        .pin-target { background: #dc2626; z-index: 10; font-size: 12px; padding: 5px 10px; } /* 115~119동 강조 */
+    </style>
+</head>
+<body>
+
+<h1>📍 전동(101동~120동) 도면 핀 위치 시각 확인기</h1>
+
+<div class="controls">
+    <label>도면 선택: </label>
+    <select id="mapSelect" onchange="changeMap(this.value)">
+        <option value="./1f.jpg">지상 1층 (1f.jpg)</option>
+        <option value="./b1f.jpg">지하 1층 (b1f.jpg)</option>
+        <option value="./b2f.jpg">지하 2층 (b2f.jpg)</option>
+        <option value="./b3f.jpg">지하 3층 (b3f.jpg)</option>
+    </select>
+</div>
+
+<div class="info-bar" id="clickedCoord">💡 도면 위 동 위치를 클릭하면 정확한 좌표가 여기에 출력됩니다.</div>
+
+<div class="map-wrapper" id="mapWrapper">
+    <img id="docMap" class="map-img" src="./1f.jpg" alt="도면을 불러올 수 없습니다." onclick="getCoordinates(event)">
+    <div id="pinLayer"></div>
+</div>
+
+<script>
+    // 4개 도면 공통 정밀 좌표 매핑 (%)
+    const buildingCoords = {
+        '101': { x: 21.5, y: 21.5 },
+        '102': { x: 21.5, y: 33.0 },
+        '103': { x: 21.5, y: 46.5 },
+        '104': { x: 21.5, y: 57.5 },
+        '105': { x: 21.5, y: 68.5 },
+        '106': { x: 21.5, y: 79.5 },
+        '107': { x: 31.0, y: 80.0 },
+        '108': { x: 32.5, y: 66.5 },
+        '109': { x: 32.5, y: 55.5 },
+        '110': { x: 32.5, y: 42.5 },
+        '111': { x: 34.0, y: 33.5 },
+        '112': { x: 42.5, y: 54.5 },
+        '113': { x: 42.5, y: 68.5 },
+        '114': { x: 52.0, y: 67.5 },
+        '115': { x: 53.5, y: 50.0 }, // 115동
+        '116': { x: 59.5, y: 38.0 }, // 116동
+        '117': { x: 71.0, y: 43.5 }, // 117동
+        '118': { x: 64.5, y: 33.0 }, // 118동
+        '119': { x: 64.5, y: 21.5 }, // 119동
+        '120': { x: 69.5, y: 28.5 }
+    };
+
+    function renderPins() {
+        const pinLayer = document.getElementById('pinLayer');
+        pinLayer.innerHTML = '';
+
+        Object.keys(buildingCoords).forEach(bNum => {
+            const coord = buildingCoords[bNum];
+            const pin = document.createElement('div');
+            
+            // 115~119동은 빨간색으로 강조 표시
+            const isTarget = ['115', '116', '117', '118', '119'].includes(bNum);
+            pin.className = `pin ${isTarget ? 'pin-target' : 'pin-normal'}`;
+            
+            pin.style.left = `${coord.x}%`;
+            pin.style.top = `${coord.y}%`;
+            pin.innerText = `${bNum}동`;
+            
+            pinLayer.appendChild(pin);
+        });
+    }
+
+    function changeMap(src) {
+        document.getElementById('docMap').src = src;
+    }
+
+    function getCoordinates(e) {
+        const rect = e.target.getBoundingClientRect();
+        const x = (((e.clientX - rect.left) / rect.width) * 100).toFixed(1);
+        const y = (((e.clientY - rect.top) / rect.height) * 100).toFixed(1);
+        document.getElementById('clickedCoord').innerText = `🎯 클릭한 위치 좌표: X: ${x}%, Y: ${y}%`;
+    }
+
+    window.onload = renderPins;
+</script>
+
+</body>
+</html>
